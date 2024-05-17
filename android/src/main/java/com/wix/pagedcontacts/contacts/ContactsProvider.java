@@ -8,6 +8,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
+import android.util.Log;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.Arguments;
@@ -28,8 +29,10 @@ import java.util.Set;
 public class ContactsProvider {
     public static final int MAX_ARGS = 990;
     private Context context;
-    private List<String> contactIds;
+    public List<String> contactIds;
     private String matchName;
+
+    private  ContactCursorReader contactCursorReader;
 
     public void setMatchName(String matchName) {
         this.matchName = matchName;
@@ -39,6 +42,7 @@ public class ContactsProvider {
     ContactsProvider(Context context) {
         this.context = context;
         contactIds = new ArrayList<>();
+        this.contactCursorReader = new ContactCursorReader(context);
     }
 
     public int getContactsCount() {
@@ -95,9 +99,21 @@ public class ContactsProvider {
         if (contactsToFetch.isEmpty()) {
             return Collections.emptyList();
         }
+        this.contactCursorReader.batchSize = params.size;
+        this.contactCursorReader.offset = params.offset;
+        if(params.offset == 0 && this.contactCursorReader.cachedContacts.size() == params.size) {
+          this.contactCursorReader.syncCachedContacts(params);
+          params.getProjection(); // this is called just to populate all the keys to query param
+          List<Contact> contacts = new ArrayList<>(this.contactCursorReader.cachedContacts.values());
+          return  contacts;
+        }
         params.setContactsToFetch(contactsToFetch);
         Cursor cursor = queryContacts(params);
-        return new ContactCursorReader(context).readWithIds(cursor);
+        if(params.offset == 0 ) {
+          // cache the first offset contacts
+          this.contactCursorReader.syncCachedContacts(params);
+        }
+        return this.contactCursorReader.readWithIds(cursor);
     }
 
     public WritableArray getContactsWithIdentifiers(QueryParams params) {

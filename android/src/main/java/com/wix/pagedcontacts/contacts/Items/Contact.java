@@ -72,7 +72,9 @@ public class Contact {
 
     private void addItemsArray(WritableMap map, List<? extends ContactItem> items, Field field, QueryParams params) {
         if (items.size() > 0) {
-            map.putArray(field.getKey(), getWritableArray(items, params));
+           synchronized (map) {
+             map.putArray(field.getKey(), getWritableArray(items, params));
+           }
         }
     }
 
@@ -87,7 +89,9 @@ public class Contact {
     private WritableArray getWritableArray(List<? extends ContactItem> items, QueryParams params) {
         WritableArray result = Arguments.createArray();
         for (ContactItem item : items) {
-            result.pushMap(item.toMap(params));
+            synchronized (result) {
+              result.pushMap(item.toMap(params));
+            }
         }
         return result;
     }

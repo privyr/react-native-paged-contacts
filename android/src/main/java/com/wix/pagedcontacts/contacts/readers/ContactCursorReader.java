@@ -52,14 +52,6 @@ public class ContactCursorReader {
         List<Contact> contacts = new ArrayList<>();
         this.readWithIdsCursorRunning = true;
 
-        if(this.offset == 0 && this.cachedContacts.values().size() == batchSize) {
-          Log.d(TAG, "contacts are found in cache");
-          contacts = new ArrayList<>(this.cachedContacts.values());
-          this.readWithIdsCursorRunning = false;
-          Log.d(TAG, "contacts are not found in cache");
-          cursor.close();
-          return  contacts;
-        }
         while (cursor.moveToNext()) {
           String contactIdFromCursor = getId(cursor);
           Contact contact;
@@ -111,7 +103,7 @@ public class ContactCursorReader {
             params.getSelectionArgs(),
             ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC"
           );
-          Log.d(TAG, "sync contacts started");
+          Log.d(TAG, "sync contacts started" + allContacts);
           if(allContacts > 50000) {
               // synchronize the contacts once the contact access is done
 

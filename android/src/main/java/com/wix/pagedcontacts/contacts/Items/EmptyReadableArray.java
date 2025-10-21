@@ -76,4 +76,9 @@ public class EmptyReadableArray implements ReadableArray {
     public ArrayList<Object> toArrayList() {
         return null;
     }
+
+    @Override
+  public long getLong(int i) {
+    return 0;
+  }
 }
